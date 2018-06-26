@@ -1,6 +1,7 @@
 package ca.uhn.fhir.jpa.demo;
 
 import ca.uhn.fhir.model.primitive.IdDt;
+import ca.uhn.fhir.rest.api.RestOperationTypeEnum;
 import ca.uhn.fhir.rest.api.server.RequestDetails;
 import ca.uhn.fhir.rest.server.exceptions.AuthenticationException;
 import ca.uhn.fhir.rest.server.interceptor.auth.AuthorizationInterceptor;
@@ -99,6 +100,14 @@ public class OAuthAuthorizationInterceptor extends AuthorizationInterceptor {
 			logger.info("JSON public key endpoint parameter not specified in properties file, bypassing authorization");
 			return new RuleBuilder()
 				.allowAll()
+				.build();
+		}
+
+		// Metadata request?  This is the only request type allowed without a bearer token if authorization is enabled...
+		if (theRequestDetails.getRestOperationType() == RestOperationTypeEnum.METADATA)
+		{
+			return new RuleBuilder()
+				.allow().metadata()
 				.build();
 		}
 
