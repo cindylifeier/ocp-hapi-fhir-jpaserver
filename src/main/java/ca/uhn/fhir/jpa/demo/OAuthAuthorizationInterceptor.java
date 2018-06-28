@@ -158,7 +158,8 @@ public class OAuthAuthorizationInterceptor extends AuthorizationInterceptor {
 		}
 
 		if (claims.getClaimValue("patient") != null) {
-			patientId = new IdDt(claims.getClaimValue("patient").toString());
+			patientId = new IdDt("Patient",
+				claims.getClaimValue("patient").toString());
 		}
 
 		if ((claims.getClaimValue("scope") != null) &&
