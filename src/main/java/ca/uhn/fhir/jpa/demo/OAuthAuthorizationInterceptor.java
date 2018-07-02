@@ -145,8 +145,6 @@ public class OAuthAuthorizationInterceptor extends AuthorizationInterceptor {
 		logger.info("Authorization header (do not log in production!) = " + authHeader);
 		logger.info("encodedAccessToken (do not log in production!) = " + encodedAccessToken);
 
-		IdDt patientId = null;
-
 		// Self validate JWT...
 		JwtClaims claims = null;
 		try {
@@ -155,11 +153,6 @@ public class OAuthAuthorizationInterceptor extends AuthorizationInterceptor {
 			throw new AuthenticationException(String.format("Error parsing Bearer token, exception info=%s",
 				e.getCause()),
 				e);
-		}
-
-		if (claims.getClaimValue("patient") != null) {
-			patientId = new IdDt("Patient",
-				claims.getClaimValue("patient").toString());
 		}
 
 		if ((claims.getClaimValue("scope") != null) &&
@@ -223,8 +216,9 @@ public class OAuthAuthorizationInterceptor extends AuthorizationInterceptor {
 
 						// Now parse read/write specification...
 						try {
-							// All patients
-							if (patientId == null) {
+							// All resources
+							if (claims.getClaimValue((scopeElements[0].compareToIgnoreCase("patient") == 0) ? "patient"
+								: resourceElements[0].toLowerCase()) == null) {
 								if (resourceElements[1].compareTo("*") == 0) {
 									rules = ((resource.compareTo("ALL") == 0) ? rules.andThen()
 										.allow().read().allResources().withAnyId().andThen()
@@ -261,33 +255,39 @@ public class OAuthAuthorizationInterceptor extends AuthorizationInterceptor {
 							}
 							else
 							{
-								// Patient compartmentalization
+								// Resource compartmentalization
+								String compartmentName = (scopeElements[0].compareToIgnoreCase("patient") == 0) ? "Patient"
+									: resourceElements[0];
+
+								IdDt resourceId = new IdDt(compartmentName,
+									claims.getClaimValue(compartmentName.toLowerCase()).toString());
+
 								if (resourceElements[1].compareTo("*") == 0) {
 									rules = ((resource.compareTo("ALL") == 0) ? rules.andThen()
-										.allow().read().allResources().inCompartment("Patient", patientId).andThen()
-										.allow().write().allResources().inCompartment("Patient", patientId)
+										.allow().read().allResources().inCompartment(compartmentName, resourceId).andThen()
+										.allow().write().allResources().inCompartment(compartmentName, resourceId)
 										:
 										rules.andThen()
 											.allow().read().resourcesOfType((Class<? extends IBaseResource>) Class.forName(String.format("org.hl7.fhir.dstu3.model.%s",
-											resource))).inCompartment("Patient", patientId).andThen()
+											resource))).inCompartment(compartmentName, resourceId).andThen()
 											.allow().write().resourcesOfType((Class<? extends IBaseResource>) Class.forName(String.format("org.hl7.fhir.dstu3.model.%s",
-											resource))).inCompartment("Patient", patientId)
+											resource))).inCompartment(compartmentName, resourceId)
 									);
 								} else {
 									if (resourceElements[1].compareToIgnoreCase("read") == 0) {
 										rules = (resource.compareTo("ALL") == 0) ? rules.andThen()
-											.allow().read().allResources().inCompartment("Patient", patientId)
+											.allow().read().allResources().inCompartment(compartmentName, resourceId)
 											:
 											rules.andThen()
 												.allow().read().resourcesOfType((Class<? extends IBaseResource>) Class.forName(String.format("org.hl7.fhir.dstu3.model.%s",
-												resource))).inCompartment("Patient", patientId);
+												resource))).inCompartment(compartmentName, resourceId);
 									} else if (resourceElements[1].compareToIgnoreCase("write") == 0) {
 										rules = (resource.compareTo("ALL") == 0) ? rules.andThen()
-											.allow().write().allResources().inCompartment("Patient", patientId)
+											.allow().write().allResources().inCompartment(compartmentName, resourceId)
 											:
 											rules.andThen()
 												.allow().write().resourcesOfType((Class<? extends IBaseResource>) Class.forName(String.format("org.hl7.fhir.dstu3.model.%s",
-												resource))).inCompartment("Patient", patientId);
+												resource))).inCompartment(compartmentName, resourceId);
 									} else {
 										logger.error(String.format("Invalid operation specified in scope, scope=%s",
 											scope));
