@@ -186,9 +186,9 @@ public class OAuthAuthorizationInterceptor extends AuthorizationInterceptor {
 								.allow().operation().named(scopeElements[0]).onType((Class<? extends IBaseResource>) Class.forName(String.format("org.hl7.fhir.dstu3.model.%s",
 									scopeElements[1])));
 						} catch (ClassNotFoundException e) {
-							logger.error(String.format("Resource type specified in the scope is not valid, scope=%s, resource type=%s"),
+							logger.error(String.format("Resource type specified in the scope is not valid, scope=%s, resource type=%s",
 								scope,
-								scopeElements[1]);
+								scopeElements[1]));
 							throw new AuthenticationException(String.format("Resource type specified in the scope is not valid, scope=%s, resource type=%s",
 								scope,
 								scopeElements[1]));
@@ -297,9 +297,9 @@ public class OAuthAuthorizationInterceptor extends AuthorizationInterceptor {
 								}
 							}
 						} catch (ClassNotFoundException e) {
-							logger.error(String.format("Resource specified in the scope is not valid, scope=%s, resource=%s"),
+							logger.error(String.format("Resource specified in the scope is not valid, scope=%s, resource=%s",
 								scope,
-								resource);
+								resource));
 							throw new AuthenticationException(String.format("Resource specified in the scope is not valid, scope=%s, resource=%s",
 								scope,
 								resource));
